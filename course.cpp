@@ -24,13 +24,21 @@ void Course::run()
     {
         char str1[80];
 
-        // First open in read only and read
-        fd1 = open(myfifo,O_RDONLY);
-        read(fd1, str1, 80);
+        fd1 = open(myfifo, O_RDONLY);
+        if (fd1 < 0)
+            continue;
 
-        // Print the read string and close
-        cout << course_name << ": " << str1 << endl;
+        // read() fills the buffer but does not terminate it, and it may return
+        // fewer bytes than asked for. Both have to be handled, or the stream
+        // prints whatever happens to follow in the buffer.
+        ssize_t received = read(fd1, str1, sizeof(str1) - 1);
         close(fd1);
+
+        if (received <= 0)
+            continue;
+        str1[received] = '\0';
+
+        cout << course_name << ": " << str1 << endl;
     }
 }
 
